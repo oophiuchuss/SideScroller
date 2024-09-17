@@ -2,4 +2,13 @@
 
 
 #include "GameModeSideScrollerBase.h"
+#include "CharacterSideScroller.h"
+#include "PlayerControllerSideScrollerBase.h"
+#include "HUDSideScroller.h"
 
+AGameModeSideScrollerBase::AGameModeSideScrollerBase()
+{
+	DefaultPawnClass = ACharacterSideScroller::StaticClass();
+	PlayerControllerClass = APlayerControllerSideScrollerBase::StaticClass();
+	HUDClass = AHUDSideScroller::StaticClass();
+}

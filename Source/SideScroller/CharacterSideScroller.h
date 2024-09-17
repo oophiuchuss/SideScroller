@@ -6,6 +6,12 @@
 #include "GameFramework/Character.h"
 #include "CharacterSideScroller.generated.h"
 
+class USpringArmComponent;
+class UCameraComponent;
+class UInputMappingContext;
+class UInputAction;
+struct FInputActionValue;
+
 UCLASS()
 class SIDESCROLLER_API ACharacterSideScroller : public ACharacter
 {
@@ -23,7 +29,19 @@ public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
-	// Called to bind functionality to input
-	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
+private:
+    // Movement Functions
+    //void Move(float Value);
 
+    // Side-scroller camera setup
+    UPROPERTY(VisibleAnywhere)
+    class UCameraComponent* SideViewCameraComponent;
+
+	/** Camera boom positioning the camera behind the character */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
+	USpringArmComponent* CameraBoom;
+
+	/** Follow camera */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
+	UCameraComponent* FollowCamera;
 };
