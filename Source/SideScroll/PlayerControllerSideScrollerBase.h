@@ -13,13 +13,13 @@ class ACharacterSideScroller;
 struct FInputActionValue;
 
 /**
- * 
+ *
  */
 UCLASS(Abstract)
-class SIDESCROLLER_API APlayerControllerSideScrollerBase : public APlayerController
+class SIDESCROLL_API APlayerControllerSideScrollerBase : public APlayerController
 {
 	GENERATED_BODY()
-	
+
 public:
 	/** MappingContext */
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = Input)

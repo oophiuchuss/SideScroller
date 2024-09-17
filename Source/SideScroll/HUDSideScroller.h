@@ -7,11 +7,11 @@
 #include "HUDSideScroller.generated.h"
 
 /**
- * 
+ *
  */
 UCLASS()
-class SIDESCROLLER_API AHUDSideScroller : public AHUD
+class SIDESCROLL_API AHUDSideScroller : public AHUD
 {
 	GENERATED_BODY()
-	
+
 };

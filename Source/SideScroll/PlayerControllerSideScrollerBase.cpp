@@ -38,7 +38,7 @@ void APlayerControllerSideScrollerBase::OnUnPossess()
 {
 	// Clear all bindings before unpossessing the player
 	EnhancedInputComponent->ClearActionBindings();
-	
+
 	Super::OnUnPossess();
 }
 
@@ -48,8 +48,9 @@ void APlayerControllerSideScrollerBase::HandleMove(const FInputActionValue& Inpu
 
 	if (PlayerCharacter)
 	{
+		
 		// find out which way is forward
-		const FRotator Rotation = GetControlRotation();
+		const FRotator Rotation = PlayerCameraManager->GetCameraRotation();
 		const FRotator YawRotation(0, Rotation.Yaw, 0);
 
 		// get forward vector

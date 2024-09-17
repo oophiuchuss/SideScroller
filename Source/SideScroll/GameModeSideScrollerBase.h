@@ -7,13 +7,13 @@
 #include "GameModeSideScrollerBase.generated.h"
 
 /**
- * 
+ *
  */
 UCLASS()
-class SIDESCROLLER_API AGameModeSideScrollerBase : public AGameModeBase
+class SIDESCROLL_API AGameModeSideScrollerBase : public AGameModeBase
 {
 	GENERATED_BODY()
-	
+
 public:
 	AGameModeSideScrollerBase();
 };
