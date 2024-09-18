@@ -6,8 +6,9 @@
 #include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
-#include "GameFramework/SpringArmComponent.h"
 #include "GameFramework/Controller.h"
+#include "SideScrollABPInterface.h"
+#include "GameplayTagsManager.h"
 
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
@@ -27,7 +28,7 @@ ACharacterSideScroller::ACharacterSideScroller()
 	bUseControllerRotationRoll = false;
 
 	// Configure character movement
-	GetCharacterMovement()->bOrientRotationToMovement = true; // Character moves in the direction of input...	
+	GetCharacterMovement()->bOrientRotationToMovement = false; // Character moves in the direction of input...	
 	GetCharacterMovement()->RotationRate = FRotator(0.0f, 500.0f, 0.0f); // ...at this rotation rate
 
 	// Note: For faster iteration times these variables, and many more, can be tweaked in the Character Blueprint
@@ -42,6 +43,9 @@ ACharacterSideScroller::ACharacterSideScroller()
 void ACharacterSideScroller::BeginPlay()
 {
 	Super::BeginPlay();
+
+	UpdateMovementTag(UGameplayTagsManager::Get().RequestGameplayTag(FName("Direction.Right")), true);
+	UpdateMovementTag(UGameplayTagsManager::Get().RequestGameplayTag(FName("Direction.None")), false);
 }
 
 
@@ -50,5 +54,42 @@ void ACharacterSideScroller::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+}
+
+void ACharacterSideScroller::UpdateMovementTag(const FGameplayTag& NewTag, bool bIsSideMovement)
+{
+	if (bIsSideMovement)
+	{
+		if (SideDirectionTag == NewTag)
+			return;
+
+		SideDirectionTag = NewTag;
+
+		TObjectPtr<UAnimInstance> AnimInstance = GetMesh()->GetAnimInstance();
+
+		checkf(AnimInstance->GetClass()->ImplementsInterface(USideScrollABPInterface::StaticClass()),
+			TEXT("SetParkourAction: AnimInstance does not implement the ABP interface"));
+
+		ISideScrollABPInterface* ABPInterface = Cast<ISideScrollABPInterface>(AnimInstance);
+		ABPInterface->Execute_SetSideDirectionTag(AnimInstance, SideDirectionTag);
+	}
+	else
+	{
+		if (DepthDirectionTag == NewTag)
+			return;
+
+		DepthDirectionTag = NewTag;
+		
+
+		TObjectPtr<UAnimInstance> AnimInstance = GetMesh()->GetAnimInstance();
+
+		checkf(AnimInstance->GetClass()->ImplementsInterface(USideScrollABPInterface::StaticClass()),
+			TEXT("SetParkourAction: AnimInstance does not implement the ABP interface"));
+
+		ISideScrollABPInterface* ABPInterface = Cast<ISideScrollABPInterface>(AnimInstance);
+		ABPInterface->Execute_SetDepthDirectionTag(AnimInstance, DepthDirectionTag);
+	}
+
+	UE_LOG(LogTemp, Log, TEXT("Updated Tag: %s"), *NewTag.ToString());
 }
 

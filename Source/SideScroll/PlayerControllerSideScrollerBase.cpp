@@ -6,6 +6,8 @@
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "InputActionValue.h"
+#include "GameplayTagsManager.h"
+#include "GameFramework/CharacterMovementComponent.h"
 
 void APlayerControllerSideScrollerBase::OnPossess(APawn* aPawn)
 {
@@ -29,9 +31,20 @@ void APlayerControllerSideScrollerBase::OnPossess(APawn* aPawn)
 	InputSusbsytem->ClearAllMappings();
 	InputSusbsytem->AddMappingContext(DefaultMappingContext, 0);
 
+
 	// Bind the input actions
 	if (MoveAction)
+	{
 		EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &APlayerControllerSideScrollerBase::HandleMove);
+		EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Completed, this, &APlayerControllerSideScrollerBase::ResetMovement);
+	}
+
+	if (LightAttackAction)
+		EnhancedInputComponent->BindAction(LightAttackAction, ETriggerEvent::Triggered, this, &APlayerControllerSideScrollerBase::HandleLightAttack);
+
+	if (HeavyAttackAction)
+		EnhancedInputComponent->BindAction(HeavyAttackAction, ETriggerEvent::Triggered, this, &APlayerControllerSideScrollerBase::HandleHeavyAttack);
+
 }
 
 void APlayerControllerSideScrollerBase::OnUnPossess()
@@ -46,21 +59,102 @@ void APlayerControllerSideScrollerBase::HandleMove(const FInputActionValue& Inpu
 {
 	FVector2D MovementVector = InputActionValue.Get<FVector2D>();
 
-	if (PlayerCharacter)
+	if (!PlayerCharacter)
+		return;
+
+	if (MovementVector.X > 0)
 	{
-		
-		// find out which way is forward
-		const FRotator Rotation = PlayerCameraManager->GetCameraRotation();
-		const FRotator YawRotation(0, Rotation.Yaw, 0);
-
-		// get forward vector
-		const FVector ForwardDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
-
-		// get right vector 
-		const FVector RightDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
-
-		// add movement 
-		PlayerCharacter->AddMovementInput(ForwardDirection, MovementVector.Y);
-		PlayerCharacter->AddMovementInput(RightDirection, MovementVector.X);
+		PlayerCharacter->GetCharacterMovement()->bOrientRotationToMovement = PlayerCharacter->bCanTurn;
+		PlayerCharacter->UpdateMovementTag(UGameplayTagsManager::Get().RequestGameplayTag(FName("Direction.Right")), true);
 	}
+	else if (MovementVector.X < 0)
+	{
+		PlayerCharacter->GetCharacterMovement()->bOrientRotationToMovement = PlayerCharacter->bCanTurn;
+		PlayerCharacter->UpdateMovementTag(UGameplayTagsManager::Get().RequestGameplayTag(FName("Direction.Left")), true);
+	}
+	else if (MovementVector.Y > 0)
+	{
+
+		PlayerCharacter->GetCharacterMovement()->bOrientRotationToMovement = false;
+		PlayerCharacter->UpdateMovementTag(UGameplayTagsManager::Get().RequestGameplayTag(FName("Direction.Into")), false);
+	}
+	else if (MovementVector.Y < 0)
+	{
+		PlayerCharacter->GetCharacterMovement()->bOrientRotationToMovement = false;
+		PlayerCharacter->UpdateMovementTag(UGameplayTagsManager::Get().RequestGameplayTag(FName("Direction.Towards")), false);
+	}
+
+	// find out which way is forward
+	const FRotator Rotation = PlayerCameraManager->GetCameraRotation();
+	const FRotator YawRotation(0, Rotation.Yaw, 0);
+
+	// get forward vector
+	const FVector ForwardDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
+
+	// get right vector 
+	const FVector RightDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
+
+	// add movement 
+	PlayerCharacter->AddMovementInput(ForwardDirection, MovementVector.Y);
+	PlayerCharacter->AddMovementInput(RightDirection, MovementVector.X);
+
+
+}
+
+void APlayerControllerSideScrollerBase::ResetMovement()
+{
+	PlayerCharacter->GetCharacterMovement()->bOrientRotationToMovement = false;
+	PlayerCharacter->UpdateMovementTag(UGameplayTagsManager::Get().RequestGameplayTag(FName("Direction.None")), false);
+}
+
+void APlayerControllerSideScrollerBase::HandleLightAttack(const FInputActionValue& InputActionValue)
+{
+	FVector2D AttackVector = InputActionValue.Get<FVector2D>();
+
+	FString Direction = "";
+
+	if (AttackVector.X > 0)
+	{
+		Direction = "Up";
+	}
+	else if (AttackVector.X < 0)
+	{
+		Direction = "Down";
+	}
+	else if (AttackVector.Y > 0)
+	{
+		Direction = "Right";
+	}
+	else if (AttackVector.Y < 0)
+	{
+		Direction = "Left";
+	}
+
+	UE_LOG(LogTemp, Warning, TEXT("Light: %s"), *Direction);
+}
+
+void APlayerControllerSideScrollerBase::HandleHeavyAttack(const FInputActionValue& InputActionValue)
+{
+	FVector2D AttackVector = InputActionValue.Get<FVector2D>();
+
+	FString Direction = "";
+
+	if (AttackVector.X > 0)
+	{
+		Direction = "Up";
+	}
+	else if (AttackVector.X < 0)
+	{
+		Direction = "Down";
+	}
+	else if (AttackVector.Y > 0)
+	{
+		Direction = "Right";
+	}
+	else if (AttackVector.Y < 0)
+	{
+		Direction = "Left";
+	}
+
+	UE_LOG(LogTemp, Warning, TEXT("Heavy: %s"), *Direction);
 }

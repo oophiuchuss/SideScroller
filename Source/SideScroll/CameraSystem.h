@@ -54,6 +54,6 @@ private:
 	TObjectPtr<USceneComponent> RootSceneComponent;
 
 	// Speed at which the camera follows the player
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = true))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = true))
 	float CameraFollowSpeed;
 };

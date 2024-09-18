@@ -2,6 +2,8 @@
 
 #pragma once
 
+#include "GameplayTagContainer.h"
+
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
 #include "CharacterSideScroller.generated.h"
@@ -21,10 +23,16 @@ public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
+	void UpdateMovementTag(const FGameplayTag& NewTag, bool bIsSideMovement);
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+	bool bCanTurn = true;
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
 private:
-
+	FGameplayTag SideDirectionTag;
+	FGameplayTag DepthDirectionTag;
 };
