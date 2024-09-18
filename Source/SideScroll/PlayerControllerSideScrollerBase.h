@@ -56,6 +56,8 @@ protected:
 
 
 private:
+	bool CheckAttackDirection(FString& AttackName, const FVector2D& InputValue);
+
 	UPROPERTY()
 	TObjectPtr<UEnhancedInputComponent> EnhancedInputComponent = nullptr;
 

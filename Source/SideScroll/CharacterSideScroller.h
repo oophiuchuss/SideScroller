@@ -25,14 +25,53 @@ public:
 
 	void UpdateMovementTag(const FGameplayTag& NewTag, bool bIsSideMovement);
 
+	void Attack(const FGameplayTag& AttackTag);
+
+	bool IsAttacking() { return bIsAttacking; }
+	bool IsTurning() { return bNeedsRotation; }
+
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
 	bool bCanTurn = true;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+	float RotationSpeed = 5.0f;
+
+	// Light attack montages
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat|LightAttacks")
+	UAnimMontage* LightAttackForwardMontage;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat|LightAttacks")
+	UAnimMontage* LightAttackTopMontage;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat|LightAttacks")
+	UAnimMontage* LightAttackBottomMontage;
+
+	// Heavy attack montages
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat|HeavyAttacks")
+	UAnimMontage* HeavyAttackForwardMontage;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat|HeavyAttacks")
+	UAnimMontage* HeavyAttackTopMontage;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat|HeavyAttacks")
+	UAnimMontage* HeavyAttackBottomMontage;
 
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
 private:
+	UFUNCTION()
+	void OnAttackAnimationEnd(UAnimMontage* Montage, bool bInterrupted);
+	bool CanAttack() const;
+	TObjectPtr<UAnimMontage> SelectAttackByTag(const FGameplayTag& AttackTag) const;
+	void RotateCharacterSmoothly(float TargetYaw);
+	void UpdateCharacterRotation(float DeltaTime);
+
+	float CharacterTargetYaw = 0.0f;
+	bool bNeedsRotation = false;
+	bool bIsAttacking = false;
 	FGameplayTag SideDirectionTag;
 	FGameplayTag DepthDirectionTag;
+	FGameplayTag ActionTag;
 };

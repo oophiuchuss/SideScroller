@@ -41,7 +41,7 @@ protected:
 
 private:
 	// Function to update camera position and rotation along the spline
-	void UpdateCamera(float DeltaTime);
+	void UpdateCamera(float DeltaTime);	
 
 	// Function to find the closest point on the spline to the player
 	float GetClosestDistanceOnSpline(const TObjectPtr<USplineComponent> Spline) const;

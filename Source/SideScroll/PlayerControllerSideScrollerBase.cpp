@@ -39,11 +39,11 @@ void APlayerControllerSideScrollerBase::OnPossess(APawn* aPawn)
 		EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Completed, this, &APlayerControllerSideScrollerBase::ResetMovement);
 	}
 
-	if (LightAttackAction)
-		EnhancedInputComponent->BindAction(LightAttackAction, ETriggerEvent::Triggered, this, &APlayerControllerSideScrollerBase::HandleLightAttack);
-
 	if (HeavyAttackAction)
 		EnhancedInputComponent->BindAction(HeavyAttackAction, ETriggerEvent::Triggered, this, &APlayerControllerSideScrollerBase::HandleHeavyAttack);
+
+	if (LightAttackAction)
+		EnhancedInputComponent->BindAction(LightAttackAction, ETriggerEvent::Triggered, this, &APlayerControllerSideScrollerBase::HandleLightAttack);
 
 }
 
@@ -64,23 +64,18 @@ void APlayerControllerSideScrollerBase::HandleMove(const FInputActionValue& Inpu
 
 	if (MovementVector.X > 0)
 	{
-		PlayerCharacter->GetCharacterMovement()->bOrientRotationToMovement = PlayerCharacter->bCanTurn;
 		PlayerCharacter->UpdateMovementTag(UGameplayTagsManager::Get().RequestGameplayTag(FName("Direction.Right")), true);
 	}
 	else if (MovementVector.X < 0)
 	{
-		PlayerCharacter->GetCharacterMovement()->bOrientRotationToMovement = PlayerCharacter->bCanTurn;
 		PlayerCharacter->UpdateMovementTag(UGameplayTagsManager::Get().RequestGameplayTag(FName("Direction.Left")), true);
 	}
 	else if (MovementVector.Y > 0)
 	{
-
-		PlayerCharacter->GetCharacterMovement()->bOrientRotationToMovement = false;
 		PlayerCharacter->UpdateMovementTag(UGameplayTagsManager::Get().RequestGameplayTag(FName("Direction.Into")), false);
 	}
 	else if (MovementVector.Y < 0)
 	{
-		PlayerCharacter->GetCharacterMovement()->bOrientRotationToMovement = false;
 		PlayerCharacter->UpdateMovementTag(UGameplayTagsManager::Get().RequestGameplayTag(FName("Direction.Towards")), false);
 	}
 
@@ -97,13 +92,10 @@ void APlayerControllerSideScrollerBase::HandleMove(const FInputActionValue& Inpu
 	// add movement 
 	PlayerCharacter->AddMovementInput(ForwardDirection, MovementVector.Y);
 	PlayerCharacter->AddMovementInput(RightDirection, MovementVector.X);
-
-
 }
 
 void APlayerControllerSideScrollerBase::ResetMovement()
 {
-	PlayerCharacter->GetCharacterMovement()->bOrientRotationToMovement = false;
 	PlayerCharacter->UpdateMovementTag(UGameplayTagsManager::Get().RequestGameplayTag(FName("Direction.None")), false);
 }
 
@@ -111,50 +103,47 @@ void APlayerControllerSideScrollerBase::HandleLightAttack(const FInputActionValu
 {
 	FVector2D AttackVector = InputActionValue.Get<FVector2D>();
 
-	FString Direction = "";
+	FString AttackName = "Action.LightAttack.";
 
-	if (AttackVector.X > 0)
-	{
-		Direction = "Up";
-	}
-	else if (AttackVector.X < 0)
-	{
-		Direction = "Down";
-	}
-	else if (AttackVector.Y > 0)
-	{
-		Direction = "Right";
-	}
-	else if (AttackVector.Y < 0)
-	{
-		Direction = "Left";
-	}
+	if (!CheckAttackDirection(AttackName, AttackVector))
+		return;
 
-	UE_LOG(LogTemp, Warning, TEXT("Light: %s"), *Direction);
+	PlayerCharacter->Attack(UGameplayTagsManager::Get().RequestGameplayTag(FName(AttackName)));
 }
 
 void APlayerControllerSideScrollerBase::HandleHeavyAttack(const FInputActionValue& InputActionValue)
 {
 	FVector2D AttackVector = InputActionValue.Get<FVector2D>();
 
-	FString Direction = "";
+	FString AttackName = "Action.HeavyAttack.";
 
-	if (AttackVector.X > 0)
+	CheckAttackDirection(AttackName, AttackVector);
+
+	PlayerCharacter->Attack(UGameplayTagsManager::Get().RequestGameplayTag(FName(AttackName)));
+}
+
+bool APlayerControllerSideScrollerBase::CheckAttackDirection(FString& AttackName, const FVector2D& InputValue)
+{
+	if (InputValue.Y > 0)
 	{
-		Direction = "Up";
+		AttackName += "Top";
+		return true;
 	}
-	else if (AttackVector.X < 0)
+	else if (InputValue.Y < 0)
 	{
-		Direction = "Down";
+		AttackName += "Bottom";
+		return true;
 	}
-	else if (AttackVector.Y > 0)
+	else if (InputValue.X > 0)
 	{
-		Direction = "Right";
+		AttackName += "Right";
+		return true;
 	}
-	else if (AttackVector.Y < 0)
+	else if (InputValue.X < 0)
 	{
-		Direction = "Left";
+		AttackName += "Left";
+		return true;
 	}
 
-	UE_LOG(LogTemp, Warning, TEXT("Heavy: %s"), *Direction);
+	return false;
 }

@@ -46,7 +46,6 @@ void ACameraSystem::BeginPlay()
 		if (Player)
 		{
 			PlayerController->SetViewTarget(this);
-
 		}
 	}
 }
@@ -77,7 +76,6 @@ void ACameraSystem::UpdateCamera(float DeltaTime)
 	FRotator LookAtRotation = UKismetMathLibrary::FindLookAtRotation(Camera->GetComponentLocation(), LookAtPosition);
 	Camera->SetWorldRotation(FMath::RInterpTo(Camera->GetComponentRotation(), LookAtRotation, DeltaTime, CameraFollowSpeed));
 }
-
 
 float ACameraSystem::GetClosestDistanceOnSpline(const TObjectPtr<USplineComponent> Spline) const
 {
