@@ -47,11 +47,11 @@ void ACharacterSideScroller::Attack(const FGameplayTag& AttackTag)
 	if (!CanAttack() || AttackTag.ToString().Contains("None"))
 		return;
 
-	if (SideDirectionTag.ToString().Contains("Left") && AttackTag.ToString().Contains("Right"))
+	if (bCanTurn && FacingDirectionTag.ToString().Contains("Left") && AttackTag.ToString().Contains("Right"))
 	{
 		UpdateMovementTag(UGameplayTagsManager::Get().RequestGameplayTag(FName("Direction.Right")), true);
 	}
-	else if (SideDirectionTag.ToString().Contains("Right") && AttackTag.ToString().Contains("Left"))
+	else if (bCanTurn && FacingDirectionTag.ToString().Contains("Right") && AttackTag.ToString().Contains("Left"))
 	{
 		UpdateMovementTag(UGameplayTagsManager::Get().RequestGameplayTag(FName("Direction.Left")), true);
 	}
@@ -60,7 +60,7 @@ void ACharacterSideScroller::Attack(const FGameplayTag& AttackTag)
 
 	bIsAttacking = true;
 
-	DisableInput(UGameplayStatics::GetPlayerController(GetWorld(), 0));
+	//DisableInput(UGameplayStatics::GetPlayerController(GetWorld(), 0));
 
 	UAnimMontage* SelectedMontage = SelectAttackByTag(ActionTag);
 
@@ -74,13 +74,8 @@ void ACharacterSideScroller::Attack(const FGameplayTag& AttackTag)
 		UE_LOG(LogTemp, Warning, TEXT("Another montage is already playing, new montage won't be played."));
 		return;
 	}
-	
-	float PlayRate = AnimInstance->Montage_Play(SelectedMontage);
-	if (PlayRate == 0.0f)
-	{
-		UE_LOG(LogTemp, Error, TEXT("Montage %s failed to play."), *SelectedMontage->GetName());
-		return;
-	}
+
+	AnimInstance->Montage_Play(SelectedMontage);
 }
 
 // Called when the game starts or when spawned
@@ -91,6 +86,7 @@ void ACharacterSideScroller::BeginPlay()
 	UpdateMovementTag(UGameplayTagsManager::Get().RequestGameplayTag(FName("Direction.Right")), true);
 	UpdateMovementTag(UGameplayTagsManager::Get().RequestGameplayTag(FName("Direction.None")), false);
 	ActionTag = UGameplayTagsManager::Get().RequestGameplayTag(FName("Action.None"));
+	FacingDirectionTag = SideDirectionTag;
 
 	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
 	checkf(AnimInstance, TEXT("Couldn't find animation instance from character mesh."));
@@ -101,7 +97,7 @@ void ACharacterSideScroller::BeginPlay()
 void ACharacterSideScroller::OnAttackAnimationEnd(UAnimMontage* Montage, bool bInterrupted)
 {
 	bIsAttacking = false;
-	EnableInput(UGameplayStatics::GetPlayerController(GetWorld(), 0));
+	//EnableInput(UGameplayStatics::GetPlayerController(GetWorld(), 0));
 	ActionTag = UGameplayTagsManager::Get().RequestGameplayTag(FName("Action.None"));
 }
 
@@ -152,8 +148,9 @@ void ACharacterSideScroller::RotateCharacterSmoothly(float TargetYaw)
 
 	SetActorRotation(NewRotation);
 
+	float YawDiff = FMath::Abs(FMath::FindDeltaAngleDegrees(NewRotation.Yaw, TargetYaw));
 	// Check if we have reached the target yaw
-	if (FMath::Abs(NewRotation.Yaw - TargetYaw) < 1.0f)
+	if (YawDiff < 5.0f)
 	{
 		bNeedsRotation = false;
 	}
@@ -180,6 +177,7 @@ void ACharacterSideScroller::UpdateMovementTag(const FGameplayTag& NewTag, bool 
 		{
 			CharacterTargetYaw = GetActorRotation().Yaw + 180.0f;
 			bNeedsRotation = true;
+			FacingDirectionTag = NewTag;
 		}
 
 		SideDirectionTag = NewTag;
@@ -191,7 +189,7 @@ void ACharacterSideScroller::UpdateMovementTag(const FGameplayTag& NewTag, bool 
 
 		ISideScrollABPInterface* ABPInterface = Cast<ISideScrollABPInterface>(AnimInstance);
 		ABPInterface->Execute_SetSideDirectionTag(AnimInstance, SideDirectionTag);
-	
+
 	}
 	else
 	{
@@ -220,11 +218,11 @@ void ACharacterSideScroller::UpdateCharacterRotation(float DeltaTime)
 		return;
 
 	UCameraComponent* CameraComponent = ViewTarget->FindComponentByClass<UCameraComponent>();
-	
+
 	if (IsTurning() || !CameraComponent) return;
 
 	// Get the right vector of the camera (which is perpendicular to the camera's forward direction)
-	FVector CameraRightVector = CameraComponent->GetRightVector() * (SideDirectionTag.ToString().Contains("Right") ? 1.0f : -1.0f);
+	FVector CameraRightVector = CameraComponent->GetRightVector() * (FacingDirectionTag.ToString().Contains("Right") ? 1.0f : -1.0f);
 
 	// Calculate the target rotation for the character, using the camera's right vector as the forward direction
 	FRotator TargetRotation = CameraRightVector.ToOrientationRotator();
@@ -233,6 +231,35 @@ void ACharacterSideScroller::UpdateCharacterRotation(float DeltaTime)
 	FRotator CurrentRotation = GetActorRotation();
 	FRotator NewRotation = FMath::RInterpTo(CurrentRotation, TargetRotation, DeltaTime, 3.0f); // Adjust the interpolation speed as needed
 
+	//UE_LOG(LogTemp, Warning, TEXT("%f, %f, %f"), NewRotation.Pitch, NewRotation.Yaw, NewRotation.Roll);
+
 	// Apply the new rotation to the character
 	SetActorRotation(NewRotation);
+}
+
+FVector ACharacterSideScroller::GetCameraLocation()
+{
+	AActor* ViewTarget = UGameplayStatics::GetPlayerController(GetWorld(), 0)->GetViewTarget();
+	if (!ViewTarget)
+		return FVector();
+
+	UCameraComponent* CameraComponent = ViewTarget->FindComponentByClass<UCameraComponent>();
+
+	if (!CameraComponent) return FVector();
+
+	FVector ResultVector = CameraComponent->GetComponentLocation();
+	ResultVector.Normalize();
+	return ResultVector;
+}
+
+FVector ACharacterSideScroller::GetCameraForwardVector()
+{
+	AActor* ViewTarget = UGameplayStatics::GetPlayerController(GetWorld(), 0)->GetViewTarget();
+	if (!ViewTarget)
+		return FVector();
+
+	UCameraComponent* CameraComponent = ViewTarget->FindComponentByClass<UCameraComponent>();
+	if (!CameraComponent) return FVector();
+
+	return CameraComponent->GetForwardVector();;
 }

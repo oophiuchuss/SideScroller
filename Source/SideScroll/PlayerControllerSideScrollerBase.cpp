@@ -70,7 +70,8 @@ void APlayerControllerSideScrollerBase::HandleMove(const FInputActionValue& Inpu
 	{
 		PlayerCharacter->UpdateMovementTag(UGameplayTagsManager::Get().RequestGameplayTag(FName("Direction.Left")), true);
 	}
-	else if (MovementVector.Y > 0)
+	
+	if (MovementVector.Y > 0)
 	{
 		PlayerCharacter->UpdateMovementTag(UGameplayTagsManager::Get().RequestGameplayTag(FName("Direction.Into")), false);
 	}

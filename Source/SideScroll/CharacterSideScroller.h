@@ -27,7 +27,13 @@ public:
 
 	void Attack(const FGameplayTag& AttackTag);
 
+	FVector GetCameraLocation();
+	FVector GetCameraForwardVector();
+
+	UFUNCTION(BlueprintCallable)
 	bool IsAttacking() { return bIsAttacking; }
+	
+	UFUNCTION(BlueprintCallable)
 	bool IsTurning() { return bNeedsRotation; }
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
@@ -68,9 +74,11 @@ private:
 	void RotateCharacterSmoothly(float TargetYaw);
 	void UpdateCharacterRotation(float DeltaTime);
 
+
 	float CharacterTargetYaw = 0.0f;
 	bool bNeedsRotation = false;
 	bool bIsAttacking = false;
+	FGameplayTag FacingDirectionTag;
 	FGameplayTag SideDirectionTag;
 	FGameplayTag DepthDirectionTag;
 	FGameplayTag ActionTag;
